@@ -57,13 +57,16 @@ fun MainWindow(state: MainWindowState) {
                     }
                 )
             }
-            Row(modifier = Modifier.padding(5.dp).background(Color(200, 200, 200))) {
+            Row(
+                modifier = Modifier.padding(5.dp).background(Color(200, 200, 200)).fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Button(onClick = {
                     clear(state)
                 }) {
                     Text("Clear")
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Button(onClick = {
                     scope.launch {
                         regexTree(state)
@@ -71,7 +74,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("Parse")
                 }
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Button(onClick = {
                     scope.launch {
                         nfa(state)
@@ -79,7 +82,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("NFA")
                 }
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Button(onClick = {
                     scope.launch {
                         dfa(state)
@@ -87,7 +90,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("DFA")
                 }
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Button(onClick = {
                     scope.launch {
                         minDFA(state)
@@ -95,7 +98,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("Minimize DFA")
                 }
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 Button(onClick = {
                     scope.launch {
                         generateCode(state)
@@ -114,7 +117,7 @@ fun MainWindow(state: MainWindowState) {
                             value = String(byteArrayOutputStream.toByteArray()).replace("\t", " ".repeat(4)),
                             onValueChange = {},
                             readOnly = true,
-                            textStyle = TextStyle(fontSize = TextUnit(25F, TextUnitType.Sp), color = Color.Red),
+                            textStyle = TextStyle(fontSize = TextUnit(20F, TextUnitType.Sp), color = Color.Red),
                             modifier = Modifier.fillMaxSize()
                         )
                     }

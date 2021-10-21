@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,7 +19,8 @@ import com.hyosakura.xlex.window.surfaceText
 fun MinDFAWindow(state: MainWindowState) {
     val availableChar = ApplicationData.converter.getAvailableChar(state.dfa!!)
     val width = state.window.size.width.div(1 + availableChar.size)
-    Column {
+    val stateHorizontal = rememberScrollState(0)
+    Column(modifier = Modifier.verticalScroll(stateHorizontal)) {
         Row {
             surfaceText("ID", width)
             for (char in availableChar) {

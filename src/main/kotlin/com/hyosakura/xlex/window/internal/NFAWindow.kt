@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,7 +22,8 @@ import java.util.stream.Collectors
 fun NFAWindow(state: MainWindowState) {
     val availableChar = ApplicationData.converter.getAvailableChar(state.nfa!!)
     val width = state.window.size.width.div(2 + availableChar.size)
-    Column {
+    val stateHorizontal = rememberScrollState(0)
+    Column(modifier = Modifier.verticalScroll(stateHorizontal)) {
         Row {
             surfaceText("ID", width)
             for (char in availableChar) {
@@ -31,7 +34,7 @@ fun NFAWindow(state: MainWindowState) {
         Spacer(modifier = Modifier.height(10.dp).background(Color.White))
         for (nfaState in state.nfaTable) {
             Row {
-                surfaceText("${nfaState.id}", width)
+                surfaceText("${nfaState.id} ${if (nfaState in state.nfa!!.acceptStates) "(accept)" else ""}", width)
                 for (char in availableChar) {
                     val next = state.nfa!!.nextStates(nfaState, char)
                     surfaceText(
@@ -46,6 +49,7 @@ fun NFAWindow(state: MainWindowState) {
                 surfaceText(
                     (state.nfa as NFA)
                         .getFreeStates(mutableListOf(nfaState))
+                        .minus(nfaState)
                         .stream()
                         .map { it.id }
                         .collect(
