@@ -13,11 +13,6 @@ fun rememberApplicationState(applicationExit: () -> Unit) = remember {
 
 
 class ApplicationState(exit: MainWindowState.() -> Unit) {
-    val mainWindowState = MainWindowState(
-        exit
-    )
-
-    fun exit() {
-        mainWindowState.exit()
-    }
+    val mainWindowState = MainWindowState(exit)
 }
+

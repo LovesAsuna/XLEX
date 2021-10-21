@@ -7,21 +7,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.window.AwtWindow
+import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import com.hyosakura.regexparser.automata.State
 import com.hyosakura.regexparser.regex.AbstractPattern
 import com.hyosakura.xlex.common.ApplicationData
 import com.hyosakura.xlex.window.internal.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.awt.FileDialog
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.PrintStream
+import java.nio.file.Path
 import java.util.stream.Collectors
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 @OptIn(ExperimentalUnitApi::class)
 @Composable
@@ -36,6 +46,24 @@ fun MainWindow(state: MainWindowState) {
         resizable = false,
         onCloseRequest = { exit() }
     ) {
+        if (state.openDialog.isAwaiting) {
+            FileDialog(
+                title = "XLEX - 读取正则表达式",
+                isLoad = true,
+                onResult = {
+                    state.openDialog.onResult(it)
+                }
+            )
+        }
+
+        if (state.saveDialog.isAwaiting) {
+            FileDialog(
+                title = "XLEX - 保存正则表达式",
+                isLoad = false,
+                onResult = { state.saveDialog.onResult(it) }
+            )
+        }
+
         Column(modifier = Modifier.background(Color(222, 222, 222))) {
             Row {
                 OutlinedTextField(
@@ -62,11 +90,19 @@ fun MainWindow(state: MainWindowState) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(onClick = {
+                    scope.launch {
+                        openOrSave(state)
+                    }
+                }) {
+                    Text("Open / Save")
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Button(onClick = {
                     clear(state)
                 }) {
                     Text("Clear")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Button(onClick = {
                     scope.launch {
                         regexTree(state)
@@ -74,7 +110,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("Parse")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Button(onClick = {
                     scope.launch {
                         nfa(state)
@@ -82,7 +118,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("NFA")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Button(onClick = {
                     scope.launch {
                         dfa(state)
@@ -90,7 +126,7 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("DFA")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Button(onClick = {
                     scope.launch {
                         minDFA(state)
@@ -98,13 +134,13 @@ fun MainWindow(state: MainWindowState) {
                 }) {
                     Text("Minimize DFA")
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Button(onClick = {
                     scope.launch {
                         generateCode(state)
                     }
                 }) {
-                    Text("Generate CPP Code")
+                    Text("Generate Code")
                 }
             }
             Row(modifier = Modifier.background(Color(240, 240, 240))) {
@@ -141,6 +177,33 @@ fun MainWindow(state: MainWindowState) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun FrameWindowScope.FileDialog(
+    title: String,
+    isLoad: Boolean,
+    onResult: (result: Path?) -> Unit
+) = AwtWindow(
+    create = {
+        object : FileDialog(window, "Choose a file", if (isLoad) LOAD else SAVE) {
+            override fun setVisible(value: Boolean) {
+                super.setVisible(value)
+                if (value) {
+                    if (file != null) {
+                        onResult(File(directory).resolve(file).toPath())
+                    } else {
+                        onResult(null)
+                    }
+                }
+            }
+        }.apply {
+            this.title = title
+        }
+    },
+    dispose = FileDialog::dispose
+)
+
+
 @OptIn(ExperimentalUnitApi::class)
 @Composable
 fun surfaceText(text: String, width: Dp) {
@@ -160,6 +223,25 @@ fun surfaceText(text: String, width: Dp) {
 
 fun error(state: MainWindowState) {
     state.showType = ShowType.ERROR
+}
+
+@Suppress("BlockingMethodInNonBlockingContext")
+suspend fun openOrSave(state: MainWindowState) {
+    if (state.regex.isEmpty()) {
+        state.openDialog.awaitResult()?.let {
+            withContext(Dispatchers.IO) {
+                state.regex = it.readText()
+            }
+        }
+
+    } else {
+        state.saveDialog.awaitResult()?.let {
+            withContext(Dispatchers.IO) {
+                it.writeText(state.regex)
+            }
+        }
+
+    }
 }
 
 fun clear(state: MainWindowState) {

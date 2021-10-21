@@ -10,6 +10,8 @@ import com.hyosakura.regexparser.automata.AutoMata
 import com.hyosakura.regexparser.automata.Edge
 import com.hyosakura.regexparser.automata.State
 import com.hyosakura.regexparser.regex.AbstractPattern
+import kotlinx.coroutines.CompletableDeferred
+import java.nio.file.Path
 
 class MainWindowState(
     private val exit: MainWindowState.() -> Unit
@@ -44,8 +46,11 @@ class MainWindowState(
 
     var showType by mutableStateOf(ShowType.CLEAR)
 
-    fun exit() = exit(this)
+    val openDialog = DialogState<Path?>()
 
+    val saveDialog = DialogState<Path?>()
+
+    fun exit() = exit(this)
 }
 
 enum class ShowType {
@@ -56,4 +61,19 @@ enum class ShowType {
     DFA,
     MIN_DFA,
     CODE
+}
+
+class DialogState<T> {
+    private var onResult: CompletableDeferred<T>? by mutableStateOf(null)
+
+    val isAwaiting get() = onResult != null
+
+    suspend fun awaitResult(): T {
+        onResult = CompletableDeferred()
+        val result = onResult!!.await()
+        onResult = null
+        return result
+    }
+
+    fun onResult(result: T) = onResult!!.complete(result)
 }
