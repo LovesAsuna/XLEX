@@ -75,7 +75,7 @@ fun MainWindow(state: MainWindowState) {
                         )
                     },
                     placeholder = {
-                        Text("请输入正则表达式(支持()*|+?)")
+                        Text("请输入正则表达式(支持()*|+?.)")
                     },
                     textStyle = TextStyle.Default.copy(fontSize = TextUnit(15F, TextUnitType.Sp)),
                     value = state.regex,
